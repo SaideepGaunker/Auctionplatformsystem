@@ -1,0 +1,72 @@
+<?php
+    session_start();
+    include 'php/db.php';
+    $sql = "SELECT * FROM teams";
+    $result = $con->query($sql);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Teams - IPL Auction System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Auction System - Admin</h1>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="viewPlayer.html">Players</a>
+            <a href="viewTeam.html">Teams</a>
+            <a href="admin.html">Admin</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <?php if(isset($_GET['msg'])): ?>
+            <div class="message" id ="alertBox">
+                <?php echo htmlspecialchars($_GET['msg']); ?>
+            </div>
+            <script>
+                setTimeout(function() {
+                  var box = document.getElementById("alertBox");
+                  if (box) {
+                    box.style.display = "none";
+                  }
+                }, 3000);
+              </script>
+        <?php endif; ?>
+
+        <div class="header">
+            <h2>Teams List</h2>
+            <a href="upload_team.html" class="add-button">Add New Team</a>
+        </div>
+
+        <div class="team-grid">
+            <?php
+            if ($result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+                    ?>
+                    <div class="team-card">
+                        <img src="assits/teams/<?php echo htmlspecialchars($row['image_path']); ?>" alt="<?php echo htmlspecialchars($row['name']); ?>" class="team-image">
+                        <div class="team-info">
+                            <h3><?php echo htmlspecialchars($row['name']); ?></h3>
+                            <p><strong>Owner:</strong> <?php echo htmlspecialchars($row['owner']); ?></p>
+                            <p><strong>Budget:</strong> ₹<?php echo number_format($row['budget']); ?></p>
+                            <div class="team-actions">
+                                <a href="update_team.html?teamId=<?php echo $row['id']; ?>" class="action-button edit-button">Edit</a>
+                                <a href="php/delete_team.php?teamId=<?php echo $row['id']; ?>" class="action-button delete-button">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                    <?php
+                }
+            } else {
+                echo "<p>No teams found</p>";
+            }
+            ?>
+        </div>
+    </div>
+</body>
+</html>

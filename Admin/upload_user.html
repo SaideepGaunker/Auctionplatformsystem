@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Player - IPL Auction System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <h1>IPL Auction System</h1>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="admin.html">Admin</a>
+            <a href="viewPlayer.html">Players</a>
+            <a href="viewTeam.html">Teams</a>
+        </div>
+    </nav>
+    
+    <?php if(isset($_GET['msg'])): ?>
+    <div class="message" id ="alertBox">
+        <?php echo htmlspecialchars($_GET['msg']); ?>
+    </div>
+    <script>
+        setTimeout(function() {
+          var box = document.getElementById("alertBox");
+          if (box) {
+            box.style.display = "none";
+          }
+        }, 3000);
+      </script>
+    <?php endif; ?>
+
+    <div class="container">
+        <div class="header">
+            <h2>Add New Player</h2>
+        </div>
+
+        <div class="form-container">
+            <form id="uploadUserForm" action="php/upload_user.php" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="name">Player Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role" required>
+                        <option value="">Select Role</option>
+                        <option value="Batsman">Batsman</option>
+                        <option value="Bowler">Bowler</option>
+                        <option value="All-rounder">All-rounder</option>
+                        <option value="Wicket-keeper">Wicket-keeper</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" name="age" min="16" max="60" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="base_price">Base Price (₹)</label>
+                    <input type="number" id="base_price" name="base_price" min="1000" step="1000" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="image">Player Image</label>
+                    <input type="file" id="image" name="image" accept="image/*" required>
+                </div>
+
+                <button type="submit" class="submit-button">Add Player</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+      $('#uploadUserForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        $.ajax({
+          url: 'php/upload_user.php',
+          type: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          dataType: 'json',
+          success: function(response) {
+            if (response.status === 'success') {
+              alert(response.message);
+              window.location.href = 'viewPlayer.html';
+            } else {
+              alert(response.message);
+            }
+          },
+          error: function(xhr) {
+            alert('An error occurred.');
+          }
+        });
+      });
+    });
+    </script>
+</body>
+</html>

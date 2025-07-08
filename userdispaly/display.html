@@ -1,0 +1,234 @@
+<?php
+session_start();
+include '../admin/php/db.php';
+
+// Get the current player index from session or set to 0
+if (!isset($_SESSION['current_player_index'])) {
+    $_SESSION['current_player_index'] = 0;
+}
+
+// Get total number of players
+$total_players_query = "SELECT COUNT(*) as total FROM players";
+$total_result = mysqli_query($con, $total_players_query);
+$total_players = mysqli_fetch_assoc($total_result)['total'];
+
+// Get current player
+$sql = "SELECT * FROM players LIMIT 1 OFFSET " . $_SESSION['current_player_index'];
+$result = mysqli_query($con, $sql);
+$player = mysqli_fetch_assoc($result);
+
+// Get teams for dropdown
+$sql_teams = "SELECT * FROM teams";
+$result_teams = mysqli_query($con, $sql_teams);
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Live Auction Display</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+  <div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+      <input type="checkbox" id="checkbox" />
+      <div class="slider round"></div>
+    </label>
+  </div>
+  <div class="container">
+    <h1>Player Auction Live</h1>
+    <?php if(isset($_GET['msg'])): ?>
+    <div class="message" id="alertBox">
+      <?php echo htmlspecialchars($_GET['msg']); ?>
+    </div>
+    <script>
+      setTimeout(function () {
+        var box = document.getElementById("alertBox");
+        if (box) {
+          box.style.display = "none";
+        }
+      }, 3000);
+    </script>
+    <?php endif; ?>
+
+    <?php
+    // Show team budgets after every 15 players (not at the start)
+    if ($_SESSION['current_player_index'] > 0 && $_SESSION['current_player_index'] % 15 == 0) {
+      $budget_sql = "SELECT name, budget, image_path FROM teams";
+      $budget_result = mysqli_query($con, $budget_sql);
+      echo '<div class="team-budgets">';
+      echo '<h2>Team Budgets</h2>';
+      echo '<table>';
+      echo '<tr><th>Team</th><th>Budget (₹)</th></tr>';
+      while($team = mysqli_fetch_assoc($budget_result)) {
+        echo '<tr>';
+        echo '<td class="team-name-cell">';
+        if (!empty($team['image_path'])) {
+          echo '<img src="../admin/assits/teams/' . htmlspecialchars($team['image_path']) . '" alt="logo" class="team-logo">';
+        }
+        echo '<span>' . htmlspecialchars($team['name']) . '</span>';
+        echo '</td>';
+        echo '<td class="budget-amount">' . number_format($team['budget']) . '</td>';
+        echo '</tr>';
+      }
+      echo '</table>';
+      echo '<div class="continue-button-wrapper">';
+      echo '<a href="php/nextPlayer.php?next=1" class="continue-button">Continue Auction</a>';
+      echo '</div>';
+      echo '</div>';
+    } else {
+    ?>
+
+    <?php if($player): ?>
+    <div class="player-card">
+      <div class="player-image">
+        <img src="../admin/assits/players/<?php echo $player['image_path']; ?>" alt="<?php echo $player['name']; ?>">
+      </div>
+
+      <div class="player-info">
+        <div class="info player-name-info">
+          <strong>Player:</strong>
+          <span>
+            <?php echo $player['name']; ?>
+          </span>
+        </div>
+        <div class="info">
+          <strong>Base Price:</strong>
+          <span>₹
+            <?php echo $player['base_price']; ?>
+          </span>
+        </div>
+        <div class="info">
+          <strong>Role:</strong>
+          <span>
+            <?php echo $player['role']; ?>
+          </span>
+        </div>
+        <div class="info">
+          <strong>Age:</strong>
+          <span>
+            <?php echo $player['age']; ?>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bidding-section">
+      <form id="soldPlayerForm" action="php/soldPlayer.php" method="POST">
+        <input type="hidden" name="player_id" value="<?php echo $player['id']; ?>">
+        <div class="action-buttons">
+          <input type="number" name="sold_price" min="<?php echo $player['base_price']; ?>"
+            placeholder="Enter sold price (min: ₹<?php echo $player['base_price']; ?>)" step="1000" required>
+          <select name="team_id" required>
+            <option value="">--Select Team--</option>
+            <?php 
+            if ($result_teams && mysqli_num_rows($result_teams) > 0) {
+                mysqli_data_seek($result_teams, 0);
+                while($team = mysqli_fetch_assoc($result_teams)){ 
+            ?>
+            <option value="<?php echo $team['id']; ?>">
+              <?php echo $team['name']; ?>
+            </option>
+            <?php } } ?>
+          </select>
+        </div>
+        <div class="action-buttons">
+          <button type="submit">Sold</button>
+          <button type="button" id="unsoldBtn">Unsold</button>
+        </div>
+      </form>
+    </div>
+    <?php else: ?>
+    <div class="message">
+      No more players available for auction.
+    </div>
+    <div class="action-buttons" style="margin-top: 2rem;">
+      <button type="button" onclick="window.location.href='php/nextPlayer.php?next=0';">Exit Auction</button>
+    </div>
+    <?php endif; ?>
+    <?php } ?>
+  </div>
+
+  <script>
+    // Theme switcher logic
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+        if (toggleSwitch) {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            if (currentTheme === 'dark') {
+                toggleSwitch.checked = true;
+            }
+
+            function switchTheme(e) {
+                if (e.target.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+            toggleSwitch.addEventListener('change', switchTheme, false);
+        }
+    });
+
+    // Existing jQuery script
+    $(document).ready(function () {
+      $('#soldPlayerForm').on('submit', function (e) {
+        e.preventDefault();
+        var formData = $(this)[0];
+        var data = new FormData(formData);
+        $.ajax({
+          url: 'php/soldPlayer.php',
+          type: 'POST',
+          data: data,
+          processData: false,
+          contentType: false,
+          dataType: 'json',
+          success: function (response) {
+            if (response.status === 'success') {
+              alert(response.message);
+              if (response.next_player) {
+                window.location.href = 'php/nextPlayer.php?next=1';
+              } else {
+                window.location.href = 'php/nextPlayer.php?next=0';
+              }
+            } else {
+              alert(response.message);
+            }
+          },
+          error: function (xhr) {
+            alert('An error occurred.');
+          }
+        });
+      });
+
+      $('#unsoldBtn').on('click', function () {
+        var playerId = $('input[name="player_id"]').val();
+        var playerName = $('.player-info span').first().text().trim();
+        $.ajax({
+          url: 'php/unsoldPlayer.php',
+          type: 'POST',
+          data: { playerId: playerId, playerName: playerName },
+          dataType: 'json',
+          success: function (response) {
+            alert(response.message);
+            if (response.next_player) {
+              window.location.href = 'php/nextPlayer.php?next=1';
+            } else {
+              window.location.href = 'php/nextPlayer.php?next=0';
+            }
+          },
+          error: function (xhr) {
+            alert('An error occurred.');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

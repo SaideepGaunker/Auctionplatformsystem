@@ -1,0 +1,95 @@
+<?php
+session_start();
+include 'php/db.php';
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Auction System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <h1>Auction System - Admin</h1>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="viewPlayer.html">Players</a>
+            <a href="viewTeam.html">Teams</a>
+            <a href="admin.html">Admin</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Welcome to Player Auction System</h2>
+            <p>Experience the thrill of cricket player auctions. Manage teams, bid on players, and build your dream
+                cricket team.</p>
+            <a href="./php/reset.php" class="cta-button" style="background-color: red; color: white;" onclick="return confirm('Are you sure you want to reset the auction? This action cannot be undone.');">Reset Auction</a>
+            <a href="../userdispaly/display.html" class="cta-button">Start Auction</a>
+        </div>
+    </section>
+
+    <section class="features">
+        <h3>Key Features</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>Player Management</h4>
+                <p>Browse through a comprehensive list of players with detailed statistics and performance records.</p>
+            </div>
+            <div class="feature-card">
+                <h4>Team Building</h4>
+                <p>Create and manage your team, set budgets, and make strategic decisions for player acquisitions.</p>
+            </div>
+            <div class="feature-card">
+                <h4>Live Auctions</h4>
+                <p>Participate in real-time auctions and bid for your favorite players to strengthen your team.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stats-grid">
+            <?php
+            // Get total players
+            $result = $con->query("SELECT COUNT(*) as count FROM players");
+            $playerCount = $result->fetch_assoc()['count'];
+            
+            // Get total teams
+            $result = $con->query("SELECT COUNT(*) as count FROM teams");
+            $teamCount = $result->fetch_assoc()['count'];
+            
+            // Get total budget
+            $result = $con->query("SELECT SUM(budget) as total FROM teams");
+            $totalBudget = $result->fetch_assoc()['total'];
+            ?>
+            <div class="stat-item">
+                <h4>
+                    <?php echo $playerCount; ?>
+                </h4>
+                <p>Total Players</p>
+            </div>
+            <div class="stat-item">
+                <h4>
+                    <?php echo $teamCount; ?>
+                </h4>
+                <p>Active Teams</p>
+            </div>
+            <div class="stat-item">
+                <h4>₹
+                    <?php echo number_format($totalBudget); ?>
+                </h4>
+                <p>Total Budget</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Auction System. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>

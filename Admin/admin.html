@@ -1,0 +1,135 @@
+<?php
+session_start();
+include 'php/db.php';
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - IPL Auction System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <h1>Auction System - Admin</h1>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="viewPlayer.html">Players</a>
+            <a href="viewTeam.html">Teams</a>
+            <a href="admin.html">Admin</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <?php if(isset($_GET['msg'])): ?>
+        <div class="message" id="alertBox">
+            <?php echo htmlspecialchars($_GET['msg']); ?>
+        </div>
+        <script>
+            setTimeout(function () {
+                var box = document.getElementById("alertBox");
+                if (box) {
+                    box.style.display = "none";
+                }
+            }, 3000);
+        </script>
+        <?php endif; ?>
+
+        <div class="admin-header">
+            <h2>Admin Dashboard</h2>
+            <div class="stats-grid">
+                <?php
+                // Get total players
+                $result = $con->query("SELECT COUNT(*) as count FROM players");
+                $playerCount = $result->fetch_assoc()['count'];
+                
+                // Get total teams
+                $result = $con->query("SELECT COUNT(*) as count FROM teams");
+                $teamCount = $result->fetch_assoc()['count'];
+                
+                // Get total budget
+                $result = $con->query("SELECT SUM(budget) as total FROM teams");
+                $totalBudget = $result->fetch_assoc()['total'];
+                ?>
+                <div class="stat-item">
+                    <h4>
+                        <?php echo $playerCount; ?>
+                    </h4>
+                    <p>Total Players</p>
+                </div>
+                <div class="stat-item">
+                    <h4>
+                        <?php echo $teamCount; ?>
+                    </h4>
+                    <p>Active Teams</p>
+                </div>
+                <div class="stat-item">
+                    <h4>₹
+                        <?php echo number_format($totalBudget); ?>
+                    </h4>
+                    <p>Total Budget</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <div class="admin-card">
+                <h3>Player Management</h3>
+                <p>Add, edit, or remove players from the auction pool.</p>
+                <a href="upload_user.html" class="admin-button">Add New Player</a>
+            </div>
+
+            <div class="admin-card">
+                <h3>Team Management</h3>
+                <p>Manage team registrations and budgets.</p>
+                <a href="upload_team.html" class="admin-button">Add New Team</a>
+            </div>
+
+            <div class="admin-card">
+                <h3>View Players</h3>
+                <p>View and manage all registered players.</p>
+                <a href="viewPlayer.html" class="admin-button">View Players</a>
+            </div>
+
+            <div class="admin-card">
+                <h3>View Teams</h3>
+                <p>View and manage all registered teams.</p>
+                <a href="viewTeam.html" class="admin-button">View Teams</a>
+            </div>
+
+            <div class="admin-card">
+                <h3>Generate Result</h3>
+                <p>View the result of the auction.</p>
+                <a id="downloadExcel" href="php/result.php" class="admin-button">Download Excel Backup</a>
+            </div>
+
+            <div class="admin-card">
+                <h3>Clear Database</h3>
+                <p>Clear all data from the database.</p>
+                <a id="clearDatabase" class="admin-button" style="background-color: red; color: white;">Delete All Data</a>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        document.getElementById('clearDatabase').onclick = function() {
+            if (confirm('Are you sure you want to delete ALL data? This action cannot be undone!')) {
+                fetch('php/cleardatabase.php')
+                    .then(response => response.text())
+                    .then(data => {
+                        alert(data);
+                        location.reload();
+                    })
+                    .catch(error => {
+                        alert('Error deleting data: ' + error);
+                    });
+            }
+        };
+        </script>
+</body>
+
+</html>
